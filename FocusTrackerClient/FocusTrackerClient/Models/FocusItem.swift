@@ -1,6 +1,6 @@
 import Foundation
 
-struct FocusItem {
+struct FocusItem: Identifiable {
     let id: String
     let title: String
     let tag: String?
