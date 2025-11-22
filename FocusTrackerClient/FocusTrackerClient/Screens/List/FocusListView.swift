@@ -3,12 +3,12 @@ import SwiftUI
 struct FocusListView: View {
     @StateObject private var viewModel: FocusListViewModel = .init(itemsRepository: ItemsRepository())
     @State private var input: String = ""
-    @FocusState private var isKeyboardFocused: Bool
+    @State private var edit: String = ""
     
     var body: some View {
         VStack {
             ForEach(viewModel.items) { item in
-                Text(item.title)
+                ItemRow(item: item, onChange: { _, newValue in viewModel.update(item: item, with: newValue)})
             }
             
             Spacer()
@@ -16,7 +16,10 @@ struct FocusListView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                 TextField("Add To-Do item", text: $input)
-                    .focused($isKeyboardFocused)
+                    .onSubmit {
+                        viewModel.addNewItem(title: input)
+                        input = ""
+                    }
             }
             .padding(16)
             .background(Color.gray.opacity(0.4))
@@ -24,16 +27,33 @@ struct FocusListView: View {
         }
         .padding(.horizontal, 16)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") {
-                    isKeyboardFocused = false
-                    viewModel.addNewItem(title: input)
-                    input = ""
+    }
+}
+
+struct ItemRow: View {
+    
+    @State private var input: String = ""
+    @State private var debounceTask: Task<Void, Never>?
+    
+    private let item: FocusItem
+    private let onChange: (String, String) -> Void
+    
+    init(item: FocusItem, onChange: @escaping (String, String) -> Void) {
+        self.item = item
+        self.onChange = onChange
+    }
+    
+    var body: some View {
+        TextField("", text: $input)
+            .onAppear { input = item.title }
+            .onChange(of: input) { oldValue, newValue in
+                debounceTask?.cancel()
+                debounceTask = Task { [oldValue, newValue] in
+                    try? await Task.sleep(nanoseconds: 2000_000_000)
+                    guard !Task.isCancelled else { return }
+                    onChange(oldValue, newValue)
                 }
             }
-        }
     }
 }
 

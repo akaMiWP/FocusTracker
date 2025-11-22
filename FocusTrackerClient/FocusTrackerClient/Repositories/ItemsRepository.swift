@@ -2,6 +2,7 @@ protocol ItemsRepositoryProtocol {
     var focusItemsStream: AsyncStream<[FocusItem]> { get async }
     
     func add(_ item: FocusItem) async
+    func update(_ item: FocusItem) async
 }
 
 actor ItemsRepository: ItemsRepositoryProtocol {
@@ -21,6 +22,13 @@ actor ItemsRepository: ItemsRepositoryProtocol {
     func add(_ item: FocusItem) async {
         items.append(item)
         broadcast()
+    }
+    
+    func update(_ item: FocusItem) async {
+        if let idx = items.firstIndex(where: { $0.id == item.id }) {
+            items[idx] = item
+            broadcast()
+        }
     }
 
     private func broadcast() {

@@ -15,3 +15,21 @@ struct FocusItem: Identifiable {
         self.createdAt = createdAt
     }
 }
+
+extension FocusItem {
+    func with(
+        id: String? = nil,
+        title: String? = nil,
+        tag: String? = nil,
+        duration: Int?  = nil,
+        createdAt: Date? = nil
+    ) -> FocusItem {
+        .init(
+            id: id ?? self.id,
+            title: title ?? self.title,
+            tag: tag ?? self.tag,
+            duration: duration ?? self.duration,
+            createdAt: createdAt ?? self.createdAt
+        )
+    }
+}
