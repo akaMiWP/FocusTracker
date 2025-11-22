@@ -1,7 +1,17 @@
 import SwiftUI
 
+struct FocusListViewWrapper: View {
+    
+    @Environment(\.modelContext) private var modelContext
+    
+    var body: some View {
+        FocusListView(viewModel: .init(itemsRepository: ItemsRepository(modelContext: modelContext)))
+    }
+}
+
 struct FocusListView: View {
-    @StateObject private var viewModel: FocusListViewModel = .init(itemsRepository: ItemsRepository())
+    @StateObject var viewModel: FocusListViewModel
+    
     @State private var input: String = ""
     @State private var edit: String = ""
     
@@ -57,7 +67,10 @@ struct ItemRow: View {
     }
 }
 
+#if DEBUG
+import SwiftData
 #Preview {
-    FocusListView()
+    FocusListViewWrapper()
+        .modelContainer(for: [FocusItemEntity.self])
 }
-
+#endif
