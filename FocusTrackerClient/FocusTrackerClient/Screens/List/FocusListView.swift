@@ -1,20 +1,13 @@
 import SwiftUI
 
 struct FocusListView: View {
-    
+    @StateObject private var viewModel: FocusListViewModel = .init()
     @State private var input: String = ""
     @FocusState private var isKeyboardFocused: Bool
     
-    @State private var items: [FocusItem] = [
-        .init(title: "A", duration: 0),
-        .init(title: "B", duration: 0),
-        .init(title: "C", duration: 0),
-        .init(title: "D", duration: 0)
-    ]
-    
     var body: some View {
         VStack {
-            ForEach(items) { item in
+            ForEach(viewModel.items) { item in
                 Text(item.title)
             }
             
@@ -38,7 +31,7 @@ struct FocusListView: View {
                     isKeyboardFocused = false
                     
                     let newItem: FocusItem = .init(title: input, duration: 0)
-                    items.append(newItem)
+                    viewModel.items.append(newItem)
                     
                     input = ""
                 }
