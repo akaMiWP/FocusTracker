@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct FocusListView: View {
-    @StateObject private var viewModel: FocusListViewModel = .init()
+    @StateObject private var viewModel: FocusListViewModel = .init(itemsRepository: ItemsRepository())
     @State private var input: String = ""
     @FocusState private var isKeyboardFocused: Bool
     
@@ -29,10 +29,7 @@ struct FocusListView: View {
                 Spacer()
                 Button("Done") {
                     isKeyboardFocused = false
-                    
-                    let newItem: FocusItem = .init(title: input, duration: 0)
-                    viewModel.items.append(newItem)
-                    
+                    viewModel.addNewItem(title: input)
                     input = ""
                 }
             }
