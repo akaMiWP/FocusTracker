@@ -12,71 +12,153 @@ struct FocusListViewWrapper: View {
 struct FocusListView: View {
     @StateObject var viewModel: FocusListViewModel
     
-    @State private var input: String = ""
-    @State private var edit: String = ""
+    @State private var isPresented: Bool = false
     
     var body: some View {
-        VStack {
-            ForEach(viewModel.items) { item in
-                ItemRow(item: item, onChange: { _, newValue in viewModel.update(item: item, with: newValue)})
-            }
-            
-            Spacer()
-            
-            HStack {
-                TextField("Add Focus Item", text: $input)
-                    .onSubmit {
-                        addNewItem()
-                    }
-                
-                Button(action: { addNewItem()}) {
-                    Image(systemName: "plus.circle.fill")
-                        .resizable()
-                        .frame(width: 24, height: 24)
+        List(viewModel.items) { item in
+            ItemRow(
+                viewModel: viewModel,
+                item: item,
+                isPresented: $isPresented
+            )
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .sheet(isPresented: $isPresented) {
+            FocusItemSheetView(viewModel: viewModel, isPresented: $isPresented)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: { isPresented.toggle() }) {
+                    Image(systemName: "plus.circle")
                 }
             }
-            .padding(16)
-            .background(Color.gray.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerSize: .init(width: 16, height: 16)))
         }
-        .padding(.horizontal, 16)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
-// MARK: - Private
-private extension FocusListView {
-    func addNewItem() {
-        guard !input.isEmpty else { return }
-        viewModel.addNewItem(title: input)
-        input = ""
+        .onChange(of: isPresented) { _, isPresented in
+            guard !isPresented else { return }
+            viewModel.selectedItem = nil
+        }
     }
 }
 
 struct ItemRow: View {
-    
-    @State private var input: String = ""
-    @State private var debounceTask: Task<Void, Never>?
+    @Binding private var isPresented: Bool
+    @ObservedObject var viewModel: FocusListViewModel
     
     private let item: FocusItem
-    private let onChange: (String, String) -> Void
     
-    init(item: FocusItem, onChange: @escaping (String, String) -> Void) {
+    init(
+        viewModel: FocusListViewModel,
+        item: FocusItem,
+        isPresented: Binding<Bool>,
+    ) {
+        self.viewModel = viewModel
         self.item = item
-        self.onChange = onChange
+        self._isPresented = isPresented
     }
     
     var body: some View {
-        TextField("", text: $input)
-            .onAppear { input = item.title }
-            .onChange(of: input) { oldValue, newValue in
-                debounceTask?.cancel()
-                debounceTask = Task { [oldValue, newValue] in
-                    try? await Task.sleep(nanoseconds: 2000_000_000)
-                    guard !Task.isCancelled else { return }
-                    onChange(oldValue, newValue)
+        VStack(alignment: .leading, spacing: 12) {
+            Text(item.title).font(.body)
+            HStack {
+                Text("duration: ")
+                    .font(.footnote)
+                    .foregroundStyle(.gray)
+                Text("\(item.duration)")
+                    .font(.footnote)
+                    .foregroundStyle(.gray)
+                Spacer()
+            }
+            
+            if let tag = item.tag {
+                HStack {
+                    Text("tags: ")
+                        .font(.footnote)
+                        .foregroundStyle(.gray)
+                    Text(tag)
+                        .font(.footnote)
+                        .foregroundStyle(.gray)
+                    Spacer()
                 }
             }
+        }
+        .onTapGesture {
+            viewModel.selectedItem = item
+            isPresented.toggle()
+        }
+    }
+}
+
+struct FocusItemSheetView: View {
+    
+    @State private var title: String = ""
+    @State private var duration: String = ""
+    @State private var tag: String = ""
+    
+    @ObservedObject var viewModel: FocusListViewModel
+    @Binding var isPresented: Bool
+    
+    init(
+        title: String = "",
+        duration: String = "",
+        tag: String = "",
+        viewModel: FocusListViewModel,
+        isPresented: Binding<Bool>
+    ) {
+        self.title = title
+        self.duration = duration
+        self.tag = tag
+        self.viewModel = viewModel
+        self._isPresented = isPresented
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            HStack {
+                Text("Focus Item")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+                
+                Button(action: {
+                    let item: FocusItem = .init(title: title, tag: tag, duration: Int(duration) ?? 0)
+                    viewModel.addNewItem(item: item)
+                    isPresented = false
+                }) {
+                    Text("Done")
+                }
+            }
+            
+            HStack {
+                Text("Title:")
+                    .fontWeight(.medium)
+                
+                TextField("Enter a title", text: $title)
+            }
+            HStack {
+                Text("Duration:")
+                    .fontWeight(.medium)
+                
+                TextField("Enter a duration", text: $duration)
+            }
+            HStack {
+                Text("Tag:")
+                    .fontWeight(.medium)
+                
+                TextField("Enter a tag", text: $tag)
+            }
+            
+            Spacer()
+        }
+        .padding(16)
+        .onAppear {
+            guard let selectedItem = viewModel.selectedItem else { return }
+            title = selectedItem.title
+            duration = String(selectedItem.duration)
+            selectedItem.tag.map { tag = $0 }
+        }
     }
 }
 

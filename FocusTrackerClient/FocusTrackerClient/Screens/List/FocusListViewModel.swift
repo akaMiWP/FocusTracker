@@ -3,6 +3,7 @@ import Combine
 @MainActor
 final class FocusListViewModel: ObservableObject {
     @Published private(set) var items: [FocusItem] = []
+    @Published var selectedItem: FocusItem? = nil
     
     private let itemsRepository: ItemsRepositoryProtocol
     private var streamTask: Task<Void, Never>?
@@ -19,8 +20,8 @@ final class FocusListViewModel: ObservableObject {
     
     deinit { streamTask?.cancel() }
     
-    func addNewItem(title: String) {
-        Task { await itemsRepository.add(.init(title: title, duration: 0)) }
+    func addNewItem(item: FocusItem) {
+        Task { await itemsRepository.add(item) }
     }
     
     func update(item: FocusItem, with title: String) {
