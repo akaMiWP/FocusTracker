@@ -24,19 +24,32 @@ struct FocusListView: View {
             Spacer()
             
             HStack {
-                Image(systemName: "magnifyingglass")
-                TextField("Add To-Do item", text: $input)
+                TextField("Add Focus Item", text: $input)
                     .onSubmit {
-                        viewModel.addNewItem(title: input)
-                        input = ""
+                        addNewItem()
                     }
+                
+                Button(action: { addNewItem()}) {
+                    Image(systemName: "plus.circle.fill")
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                }
             }
             .padding(16)
-            .background(Color.gray.opacity(0.4))
+            .background(Color.gray.opacity(0.1))
             .clipShape(RoundedRectangle(cornerSize: .init(width: 16, height: 16)))
         }
         .padding(.horizontal, 16)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - Private
+private extension FocusListView {
+    func addNewItem() {
+        guard !input.isEmpty else { return }
+        viewModel.addNewItem(title: input)
+        input = ""
     }
 }
 
