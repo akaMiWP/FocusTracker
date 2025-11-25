@@ -15,12 +15,15 @@ struct FocusListView: View {
     @State private var isPresented: Bool = false
     
     var body: some View {
-        List(viewModel.items) { item in
-            ItemRow(
-                viewModel: viewModel,
-                item: item,
-                isPresented: $isPresented
-            )
+        List {
+            ForEach(viewModel.items) { item in
+                ItemRow(
+                    viewModel: viewModel,
+                    item: item,
+                    isPresented: $isPresented
+                )
+            }
+            .onDelete(perform: remove(at:))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .sheet(isPresented: $isPresented) {
@@ -39,6 +42,12 @@ struct FocusListView: View {
             guard !isPresented else { return }
             viewModel.selectedItem = nil
         }
+    }
+}
+
+private extension FocusListView {
+    func remove(at offsets: IndexSet) {
+        viewModel.remove(at: offsets)
     }
 }
 

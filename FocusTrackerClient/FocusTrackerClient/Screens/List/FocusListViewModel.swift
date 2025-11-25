@@ -1,4 +1,5 @@
 import Combine
+import Foundation
 
 @MainActor
 final class FocusListViewModel: ObservableObject {
@@ -26,5 +27,9 @@ final class FocusListViewModel: ObservableObject {
     
     func update(item: FocusItem, with title: String) {
         Task { await itemsRepository.update(item.with(title: title)) }
+    }
+    
+    func remove(at offsets: IndexSet) {
+        Task { await itemsRepository.remove(at: offsets) }
     }
 }

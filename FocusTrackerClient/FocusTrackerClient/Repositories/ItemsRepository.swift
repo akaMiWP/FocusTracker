@@ -6,6 +6,7 @@ protocol ItemsRepositoryProtocol {
     
     func add(_ item: FocusItem) async
     func update(_ item: FocusItem) async
+    func remove(at offsets: IndexSet) async
 }
 
 @MainActor
@@ -52,6 +53,29 @@ final class ItemsRepository: ItemsRepositoryProtocol {
             broadcast()
         }
     }
+    
+    func remove(at offsets: IndexSet) async {
+        let idsToDelete: [String] = offsets.compactMap { index in
+            guard items.indices.contains(index) else { return nil }
+            return items[index].id
+        }
+        guard !idsToDelete.isEmpty else { return }
+
+        let descriptor = FetchDescriptor<FocusItemEntity>(predicate: #Predicate { entity in
+            idsToDelete.contains(entity.id)
+        })
+        if let entities = try? modelContext.fetch(descriptor) {
+            for entity in entities {
+                modelContext.delete(entity)
+            }
+            try? modelContext.save()
+        }
+
+        let idsSet = Set(idsToDelete)
+        items.removeAll { idsSet.contains($0.id) }
+
+        broadcast()
+    }
 }
 
 // MARK: - Private
@@ -70,3 +94,4 @@ private extension ItemsRepository {
         }
     }
 }
+
