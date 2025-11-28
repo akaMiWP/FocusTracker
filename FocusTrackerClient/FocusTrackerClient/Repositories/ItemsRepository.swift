@@ -4,9 +4,15 @@ import SwiftData
 protocol ItemsRepositoryProtocol {
     var focusItemsStream: AsyncStream<[FocusItem]> { get async }
     
+    // MARK: - FocusItem
     func add(_ item: FocusItem) async
     func update(_ item: FocusItem) async
     func remove(at offsets: IndexSet) async
+    
+    // MARK: - FocusSession
+    /// when a session is done, stopped, app enter the background or app crash
+    func record(_ session: FocusSession) async
+    func update(_ session: FocusSession) async
 }
 
 @MainActor
@@ -29,7 +35,10 @@ final class ItemsRepository: ItemsRepositoryProtocol {
             continuation.yield(items)
         }
     }
+}
 
+// MARK: - Focus Item
+extension ItemsRepository {
     func add(_ item: FocusItem) async {
         modelContext.insert(FocusItemEntity(item: item))
         try? modelContext.save()
@@ -75,6 +84,17 @@ final class ItemsRepository: ItemsRepositoryProtocol {
         items.removeAll { idsSet.contains($0.id) }
 
         broadcast()
+    }
+}
+
+// MARK: - Focus Session
+extension ItemsRepository {
+    func record(_ session: FocusSession) async {
+        
+    }
+    
+    func update(_ session: FocusSession) async {
+        
     }
 }
 
