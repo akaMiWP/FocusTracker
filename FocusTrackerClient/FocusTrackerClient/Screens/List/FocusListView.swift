@@ -100,15 +100,9 @@ struct FocusItemSheetView: View {
     @Binding var isPresented: Bool
     
     init(
-        title: String = "",
-        duration: String = "",
-        tag: String = "",
         viewModel: FocusListViewModel,
         isPresented: Binding<Bool>
     ) {
-        self.title = title
-        self.duration = duration
-        self.tag = tag
         self.viewModel = viewModel
         self._isPresented = isPresented
     }
@@ -123,8 +117,12 @@ struct FocusItemSheetView: View {
                 Spacer()
                 
                 Button(action: {
-                    let item: FocusItem = .init(title: title, tag: tag, duration: Int(duration) ?? 0)
-                    viewModel.addNewItem(item: item)
+                    if let selectedItem = viewModel.selectedItem {
+                        viewModel.update(item: selectedItem, title: title, tag: tag, duration: Int(duration) ?? 0)
+                    } else {
+                        let item: FocusItem = .init(title: title, tag: tag, duration: Int(duration) ?? 0)
+                        viewModel.addNewItem(item: item)
+                    }
                     isPresented = false
                 }) {
                     Text("Done")

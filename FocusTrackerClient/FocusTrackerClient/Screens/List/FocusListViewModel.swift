@@ -34,7 +34,7 @@ final class FocusListViewModel: ObservableObject {
         Task { await itemsRepository.add(item) }
     }
     
-    func update(item: FocusItem, with title: String) {
+    func update(item: FocusItem, title: String, tag: String, duration: Int) {
         Task { await itemsRepository.update(item.with(title: title)) }
     }
     

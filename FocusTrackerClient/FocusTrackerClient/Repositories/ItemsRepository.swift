@@ -83,6 +83,11 @@ extension ItemsRepository {
             items[idx] = item
             broadcast()
         }
+        
+        if focusItem?.id == item.id {
+            focusItem = item
+            focusItemContinuation?.yield(focusItem)
+        }
     }
     
     func remove(at offsets: IndexSet) async {
@@ -142,7 +147,7 @@ private extension ItemsRepository {
         self.items = items
         broadcast()
         
-        if let focusItemId = UserDefaults.standard.string(forKey: "selectedFocusItemId") {
+        if let focusItemId = UserDefaults.standard.string(forKey: UserDefaultKey.focusItemID.rawValue) {
             focusItem = items.first(where: { $0.id == focusItemId }) ?? items.first
         }
     }
