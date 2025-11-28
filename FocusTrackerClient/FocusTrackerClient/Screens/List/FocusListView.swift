@@ -1,14 +1,5 @@
 import SwiftUI
 
-struct FocusListViewWrapper: View {
-    
-    @Environment(\.modelContext) private var modelContext
-    
-    var body: some View {
-        FocusListView(viewModel: .init(itemsRepository: ItemsRepository(modelContext: modelContext)))
-    }
-}
-
 struct FocusListView: View {
     @StateObject var viewModel: FocusListViewModel
     
@@ -170,11 +161,3 @@ struct FocusItemSheetView: View {
         }
     }
 }
-
-#if DEBUG
-import SwiftData
-#Preview {
-    FocusListViewWrapper()
-        .modelContainer(for: [FocusItemEntity.self])
-}
-#endif

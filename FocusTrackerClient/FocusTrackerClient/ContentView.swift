@@ -1,24 +1,39 @@
-// 
-
+import Combine
 import SwiftData
 import SwiftUI
 
+struct RootWrapper: View {
+    @Environment(\.modelContext) private var modelContext
+    var body: some View {
+        ContentView(viewModel: .init(itemsRepository: ItemsRepository(modelContext: modelContext)))
+    }
+}
+
+final class ContentViewModel: ObservableObject {
+    let itemsRepository: ItemsRepositoryProtocol
+    
+    init(itemsRepository: ItemsRepositoryProtocol) {
+        self.itemsRepository = itemsRepository
+    }
+}
+
 struct ContentView: View {
+    
+    @StateObject var viewModel: ContentViewModel
 
     var body: some View {
         TabView {
-            Tab("Items", image: "") {
+            Tab("Session", image: "") {
                 NavigationStack {
-                    FocusListViewWrapper()
-                        .modelContainer(for: [FocusItemEntity.self])
-                        .navigationTitle("Items")
+                    SessionView(viewModel: .init(itemsRepository: viewModel.itemsRepository))
+                        .navigationTitle("Session")
                 }
             }
             
-            Tab("Session", image: "") {
+            Tab("Items", image: "") {
                 NavigationStack {
-                    EmptyView()
-                        .navigationTitle("Session")
+                    FocusListView(viewModel: .init(itemsRepository: viewModel.itemsRepository))
+                        .navigationTitle("Items")
                 }
             }
             
@@ -30,8 +45,4 @@ struct ContentView: View {
             }
         }
     }
-}
-
-#Preview {
-    ContentView()
 }

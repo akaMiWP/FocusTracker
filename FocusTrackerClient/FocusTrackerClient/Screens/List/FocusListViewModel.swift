@@ -8,6 +8,7 @@ final class FocusListViewModel: ObservableObject {
     
     private let itemsRepository: ItemsRepositoryProtocol
     private var streamTask: Task<Void, Never>?
+    private var selectedItemTask: Task<Void, Never>?
     
     init(itemsRepository: ItemsRepositoryProtocol) {
         self.itemsRepository = itemsRepository
@@ -15,6 +16,14 @@ final class FocusListViewModel: ObservableObject {
             guard let self else { return }
             for await newItems in await itemsRepository.focusItemsStream {
                 self.items = newItems
+            }
+        }
+        selectedItemTask = Task { [weak self] in
+            guard let self else { return }
+            for await selectedItem in $selectedItem.values {
+                if let selectedItem {
+                    await itemsRepository.save(key: .focusItemID, value: selectedItem.id)
+                }
             }
         }
     }

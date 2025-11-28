@@ -3,29 +3,54 @@ import SwiftData
 
 protocol ItemsRepositoryProtocol {
     var focusItemsStream: AsyncStream<[FocusItem]> { get async }
+    var focusedItemStream: AsyncStream<FocusItem?> { get async }
     
-    // MARK: - FocusItem
+    // FocusItem
     func add(_ item: FocusItem) async
     func update(_ item: FocusItem) async
     func remove(at offsets: IndexSet) async
     
-    // MARK: - FocusSession
-    /// when a session is done, stopped, app enter the background or app crash
-    func record(_ session: FocusSession) async
+    // FocusSession
+    func record(_ session: FocusSession) async /// when a session is done, stopped, app enter the background or app crash
     func update(_ session: FocusSession) async
+    
+    // Generic
+    func save<T>(key: UserDefaultKey, value: T?) async
 }
 
 @MainActor
 final class ItemsRepository: ItemsRepositoryProtocol {
+
+    private let modelContext: ModelContext
+    
+    // Focus item properties
     private var items: [FocusItem] = []
     private var continuations: [AsyncStream<[FocusItem]>.Continuation] = []
-    private let modelContext: ModelContext
+    
+    // Focus session properties
+    private var focusItem: FocusItem?
+    private var focusItemContinuation: AsyncStream<FocusItem?>.Continuation?
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         Task { await loadInitial() }
     }
 
+    func save<T>(key: UserDefaultKey, value: T?) async {
+        guard let value else { return }
+        UserDefaults.standard.set(value, forKey: key.rawValue)
+        
+        switch key {
+        case .focusItemID:
+            guard let value = value as? String else { return }
+            focusItem = items.first(where: { $0.id == value }) ?? items.first
+            focusItemContinuation?.yield(focusItem)
+        }
+    }
+}
+
+// MARK: - Focus Item
+extension ItemsRepository {
     var focusItemsStream: AsyncStream<[FocusItem]> {
         AsyncStream { continuation in
             // Store continuation so we can push updates
@@ -35,10 +60,7 @@ final class ItemsRepository: ItemsRepositoryProtocol {
             continuation.yield(items)
         }
     }
-}
-
-// MARK: - Focus Item
-extension ItemsRepository {
+    
     func add(_ item: FocusItem) async {
         modelContext.insert(FocusItemEntity(item: item))
         try? modelContext.save()
@@ -89,6 +111,13 @@ extension ItemsRepository {
 
 // MARK: - Focus Session
 extension ItemsRepository {
+    var focusedItemStream: AsyncStream<FocusItem?> {
+        AsyncStream { continuation in
+            self.focusItemContinuation = continuation
+            continuation.yield(focusItem)
+        }
+    }
+    
     func record(_ session: FocusSession) async {
         
     }
@@ -107,10 +136,14 @@ private extension ItemsRepository {
     }
     
     func loadInitial() async {
-        if let entities = try? modelContext.fetch(FetchDescriptor<FocusItemEntity>()) {
-            let items = entities.map(FocusItem.init(entity:))
-            self.items = items
-            broadcast()
+        guard let entities = try? modelContext.fetch(FetchDescriptor<FocusItemEntity>()) else { return }
+
+        let items = entities.map(FocusItem.init(entity:))
+        self.items = items
+        broadcast()
+        
+        if let focusItemId = UserDefaults.standard.string(forKey: "selectedFocusItemId") {
+            focusItem = items.first(where: { $0.id == focusItemId }) ?? items.first
         }
     }
 }

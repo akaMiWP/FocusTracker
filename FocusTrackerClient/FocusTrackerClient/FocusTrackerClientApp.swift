@@ -1,12 +1,12 @@
-// 
-
+import SwiftData
 import SwiftUI
 
 @main
 struct FocusTrackerClientApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootWrapper()
+                .modelContainer(for: [FocusItemEntity.self])
         }
     }
 }
