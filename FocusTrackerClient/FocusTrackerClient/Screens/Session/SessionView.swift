@@ -1,10 +1,3 @@
-//Timer Screen
-//   Start → Running
-//   Pause → Paused
-//   Resume → Running
-//   Stop → Complete session
-//   Back → List
-
 import SwiftUI
 
 struct SessionView: View {
@@ -12,9 +5,8 @@ struct SessionView: View {
     @StateObject var viewModel: SessionViewModel
     
     var body: some View {
-        VStack {
-            
-            VStack {
+        VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text("Ohayo ! Select an item that you would like to focus")
                 Button(action: {}) {
                     if let item = viewModel.focusedItem {
@@ -26,19 +18,32 @@ struct SessionView: View {
                 }
             }
             
-            Spacer()
-            
-            Text("20:00")
+            DatePicker("Duration", selection: $viewModel.selectedTime, displayedComponents: .hourAndMinute)
             
             HStack {
-                Button(action: {}) {
+                Button(action: viewModel.stopTimer) {
                     Text("Stop")
                 }
                 
-                Button(action: {}) {
+                Button(action: viewModel.startTimer) {
                     Text("Start")
                 }
             }
+            
+            VStack {
+                Text("Count down: \(formatted(timeInterval: viewModel.remainingTime))")
+            }
+            
+            Spacer()
         }
+        .padding(.horizontal, 16)
+    }
+}
+
+// MARK: - Private
+private extension SessionView {
+    func formatted(timeInterval: TimeInterval?) -> String {
+        guard let timeInterval else { return "" }
+        return Duration.seconds(timeInterval).formatted()
     }
 }
