@@ -30,6 +30,13 @@ struct ContentView: View {
                 }
             }
             
+            Tab("SessionV2", image: "") {
+                NavigationStack {
+                    SessionV2View(viewModel: .init(itemsRepository: viewModel.itemsRepository))
+                        .navigationTitle("SessionV2")
+                }
+            }
+            
             Tab("Items", image: "") {
                 NavigationStack {
                     FocusListView(viewModel: .init(itemsRepository: viewModel.itemsRepository))
