@@ -43,8 +43,11 @@ final class ItemsRepository: ItemsRepositoryProtocol {
         switch key {
         case .focusItemID:
             guard let value = value as? String else { return }
-            focusItem = items.first(where: { $0.id == value }) ?? items.first
-            focusItemContinuation?.yield(focusItem)
+            let focusItem = items.first(where: { $0.id == value }) ?? items.first
+            if self.focusItem != focusItem {
+                self.focusItem = focusItem
+                self.focusItemContinuation?.yield(focusItem)
+            }
         }
     }
 }
