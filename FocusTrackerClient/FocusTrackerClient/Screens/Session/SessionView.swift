@@ -1,3 +1,7 @@
+//
+//  Created by akaMiWP on 1/12/2568 BE.
+//  Copyright © 2568 BE. All rights reserved.
+
 import SwiftUI
 
 struct SessionView: View {
@@ -5,38 +9,99 @@ struct SessionView: View {
     @StateObject var viewModel: SessionViewModel
     
     var body: some View {
-        VStack(alignment: .leading) {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Ohayo ! Select an item that you would like to focus")
-                Button(action: {}) {
-                    if let item = viewModel.focusedItem {
-                        Text(item.title)
-                    } else {
-                        Text("No selected item")
-                            .foregroundStyle(.gray)
+        VStack(alignment: .center, spacing: 24) {
+            if let item = viewModel.focusedItem {
+                HStack {
+                    Text("Select an item to focus:")
+                        .font(.subheadline)
+                    
+                    Spacer()
+                    
+                    Picker("Select an item", selection: $viewModel.focusedItem) {
+                        Text("None").tag(nil as String?)
+
+                        ForEach(viewModel.focusItems, id: \.id) { item in
+                            Text(item.title).tag(item)
+                        }
+                    }
+                    .disabled(viewModel.isSessionActive)
+                    .onChange(of: item) { _, newValue in
+                        viewModel.select(newValue)
                     }
                 }
-            }
-            
-            DatePicker("Duration", selection: $viewModel.selectedTime, displayedComponents: .hourAndMinute)
-            
-            HStack {
-                Button(action: viewModel.stopTimer) {
-                    Text("Stop")
+                
+                TimerView(countdownText: formatted(timeInterval: viewModel.remainingTime))
+                
+                HStack {
+                    Button(action: viewModel.stopTimer) {
+                        Text("Stop")
+                    }
+                    .buttonStyle(.glass)
+                    
+                    Button(action: viewModel.startTimer) {
+                        Text("Start")
+                    }
+                    .buttonStyle(.glassProminent)
                 }
                 
-                Button(action: viewModel.startTimer) {
-                    Text("Start")
+                VStack(alignment: .leading) {
+                    Text("Session detail")
+                        .font(.headline)
+                    
+                    RowView(leadingText: "Title:", trailingText: item.title)
+                    
+                    RowView(leadingText: "Tag:", trailingText: item.tag ?? "")
+                    
+                    RowView(leadingText: "Duration:", trailingText: String(item.duration))
                 }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.white)
+                .clipShape(RoundedRectangle(cornerSize: .init(width: 16, height: 16)))
+                .shadow(color: Color.black.opacity(0.2), radius: 8)
+                
+                Spacer()
+            } else {
+                Text("Please select a focus item")
             }
-            
-            VStack {
-                Text("Count down: \(formatted(timeInterval: viewModel.remainingTime))")
-            }
-            
-            Spacer()
         }
         .padding(.horizontal, 16)
+    }
+}
+
+struct TimerView: View {
+    
+    private let countdownText: String
+    
+    init(countdownText: String) {
+        self.countdownText = countdownText
+    }
+    
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(Color.blue, lineWidth: 8)
+                .frame(width: 150, height: 150)
+            
+            Text(countdownText)
+                .font(.headline)
+                .foregroundStyle(.primary)
+        }
+    }
+}
+
+struct RowView: View {
+    let leadingText: String
+    let trailingText: String
+    
+    var body: some View {
+        HStack {
+            Text(leadingText).font(.headline)
+            
+            Spacer()
+            
+            Text(trailingText).font(.subheadline)
+        }
     }
 }
 

@@ -30,10 +30,10 @@ struct ContentView: View {
                 }
             }
             
-            Tab("SessionV2", image: "") {
+            Tab("Session", image: "") {
                 NavigationStack {
-                    SessionV2View(viewModel: .init(itemsRepository: viewModel.itemsRepository))
-                        .navigationTitle("SessionV2")
+                    SessionView(viewModel: .init(itemsRepository: viewModel.itemsRepository))
+                        .navigationTitle("Session")
                 }
             }
             

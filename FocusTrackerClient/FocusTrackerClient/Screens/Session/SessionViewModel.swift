@@ -1,37 +1,57 @@
+//
+//  Created by akaMiWP on 1/12/2568 BE.
+//  Copyright © 2568 BE. All rights reserved.
+    
 import Combine
 import Foundation
 
-private let baseDate = Calendar.current.date(bySettingHour: 0, minute: 0, second: 0, of: Date()) ?? .init()
-
+@MainActor
 final class SessionViewModel: ObservableObject {
+    
     @Published var focusedItem: FocusItem?
-    private let itemsRepository: ItemsRepositoryProtocol
-    private var focusedItemTask: Task<Void, Never>?
-    private var countdownTask: Task<Void, Never>?
+    @Published var focusItems: [FocusItem] = []
     
     ///Timer properties
-    @Published var selectedTime: Date
     @Published var remainingTime: TimeInterval?
-    private var totalTimeCountdown: TimeInterval {
-        selectedTime.timeIntervalSince1970 - baseDate.timeIntervalSince1970
-    }
+    var isSessionActive: Bool { countdownTask != nil }
+    private var countdownTask: Task<Void, Never>?
     
-    var isTimerActive: Bool { countdownTask != nil }
-    
+    private let itemsRepository: ItemsRepositoryProtocol
+    private var focusedItemTask: Task<Void, Never>?
+    private var focusItemsTask: Task<Void, Never>?
+
     init(itemsRepository: ItemsRepositoryProtocol) {
         self.itemsRepository = itemsRepository
-        self.selectedTime  = Calendar.current.date(bySettingHour: 0, minute: 25, second: 0, of: Date()) ?? .init()
         
         focusedItemTask = Task { [weak self] in
             guard let self else { return }
-            for await focusedItem in await itemsRepository.focusedItemStream {
-                self.focusedItem = focusedItem
+            for await item in await itemsRepository.focusedItemStream {
+                self.focusedItem = item
+                self.remainingTime = item?.timeInSeconds
+            }
+        }
+        
+        focusItemsTask = Task { [weak self] in
+            guard let self else { return }
+            for await items in await itemsRepository.focusItemsStream {
+                self.focusItems = items
             }
         }
     }
     
+    func select(_ item: FocusItem) {
+        Task { [weak self] in
+            guard let self else { return }
+            await itemsRepository.save(key: .focusItemID, value: item.id)
+        }
+    }
+}
+
+// MARK: - Timer
+extension SessionViewModel {
     func startTimer() {
-        remainingTime = totalTimeCountdown
+        resetCountdownTask()
+        remainingTime = focusedItem?.timeInSeconds
         countdownTask = Task { [weak self] in
             guard let self else { return }
             
@@ -55,11 +75,25 @@ final class SessionViewModel: ObservableObject {
     }
     
     func stopTimer() {
-        countdownTask = nil
+        resetCountdownTask()
     }
     
     func cancelTimer() {
-        remainingTime = totalTimeCountdown
+        resetCountdownTask()
+        remainingTime = focusedItem?.timeInSeconds
+    }
+}
+
+// MARK: - Private
+private extension SessionViewModel {
+    func resetCountdownTask() {
+        countdownTask?.cancel()
         countdownTask = nil
+    }
+}
+
+private extension FocusItem {
+    var timeInSeconds: Double {
+        Double(duration * 60)
     }
 }
