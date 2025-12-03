@@ -75,11 +75,11 @@ extension ItemsRepository {
     func update(_ item: FocusItem) async {
         let id = item.id
         let descriptor = FetchDescriptor<FocusItemEntity>(predicate: #Predicate { $0.id == id })
+        
         guard let managed = try? modelContext.fetch(descriptor).first else { return }
         managed.title = item.title
         managed.tag = item.tag
         managed.duration = item.duration
-        
         try? modelContext.save()
         
         if let idx = items.firstIndex(where: { $0.id == item.id }) {
@@ -127,11 +127,25 @@ extension ItemsRepository {
     }
     
     func record(_ session: FocusSession) async {
+        let id = session.focusItemID
+        let descriptor = FetchDescriptor<FocusItemEntity>(predicate: #Predicate { $0.id == id })
         
+        guard let _ = try? modelContext.fetch(descriptor).first else { return }
+        modelContext.insert(FocusSessionEntity(session: session))
+        try? modelContext.save()
+        
+        //TODO: Update a list of finished sessions for History screens
     }
     
     func update(_ session: FocusSession) async {
+        let id = session.id
+        let descriptor = FetchDescriptor<FocusSessionEntity>(predicate: #Predicate { $0.id == id })
         
+        guard let managed = try? modelContext.fetch(descriptor).first else { return }
+        managed.endTime = session.endTime
+        try? modelContext.save()
+        
+        //TODO: Update a list of finished sessions for History screens
     }
 }
 

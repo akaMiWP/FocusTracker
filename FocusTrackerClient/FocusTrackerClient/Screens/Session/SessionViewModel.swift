@@ -15,6 +15,8 @@ final class SessionViewModel: ObservableObject {
     @Published var remainingTime: TimeInterval?
     var isSessionActive: Bool { countdownTask != nil }
     private var countdownTask: Task<Void, Never>?
+    private var startingTime: Date?
+    private var pendingFocusSession: FocusSession?
     
     private let itemsRepository: ItemsRepositoryProtocol
     private var focusedItemTask: Task<Void, Never>?
@@ -50,32 +52,50 @@ final class SessionViewModel: ObservableObject {
 // MARK: - Timer
 extension SessionViewModel {
     func startTimer() {
-        resetCountdownTask()
-        remainingTime = focusedItem?.timeInSeconds
+        cancelTimer()
+        
+        startingTime = .init()
         countdownTask = Task { [weak self] in
-            guard let self else { return }
+            guard let self, let focusedItem, let startingTime else { return }
             
             while let current = self.remainingTime, current > 0 {
                 try? await Task.sleep(for: .seconds(1))
                 remainingTime = current - 1
             }
-            //TODO: show dialog timer alert done + record a session
+            
+            //TODO: show dialog timer alert done
+            let session: FocusSession = .init(focusItemID: focusedItem.id, startTime: startingTime, endTime: .init())
+            await itemsRepository.record(session)
         }
     }
     
     func resumeTimer() {
         countdownTask = Task { [weak self] in
-            guard let self, let remainingTime else { return }
+            guard let self, let focusedItem, let startingTime, let pendingFocusSession else { return }
             
-            while remainingTime > 0 {
+            while let current = self.remainingTime, current > 0 {
                 try? await Task.sleep(for: .seconds(1))
+                remainingTime = current - 1
             }
-            //TODO: show dialog timer alert done + record a session
+            
+            //TODO: show dialog timer alert done
+            var session: FocusSession = pendingFocusSession
+            session.endTime = .init()
+            await itemsRepository.update(session)
+            self.pendingFocusSession = nil
         }
     }
     
     func stopTimer() {
         resetCountdownTask()
+        
+        guard let focusedItem, let startingTime else { return }
+        let session: FocusSession = .init(focusItemID: focusedItem.id, startTime: startingTime)
+        self.pendingFocusSession = session
+        Task { [weak self] in
+            guard let self else { return }
+            await itemsRepository.record(session)
+        }
     }
     
     func cancelTimer() {
@@ -89,6 +109,7 @@ private extension SessionViewModel {
     func resetCountdownTask() {
         countdownTask?.cancel()
         countdownTask = nil
+        startingTime = nil
     }
 }
 

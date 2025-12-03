@@ -30,6 +30,8 @@ struct SessionView: View {
                     }
                 }
                 
+                Spacer()
+                
                 TimerView(countdownText: formatted(timeInterval: viewModel.remainingTime))
                 
                 HStack {
@@ -43,6 +45,8 @@ struct SessionView: View {
                     }
                     .buttonStyle(.glassProminent)
                 }
+                
+                Spacer()
                 
                 VStack(alignment: .leading) {
                     Text("Session detail")
@@ -59,13 +63,11 @@ struct SessionView: View {
                 .background(.white)
                 .clipShape(RoundedRectangle(cornerSize: .init(width: 16, height: 16)))
                 .shadow(color: Color.black.opacity(0.2), radius: 8)
-                
-                Spacer()
             } else {
                 Text("Please select a focus item")
             }
         }
-        .padding(.horizontal, 16)
+        .padding(16)
     }
 }
 
@@ -96,11 +98,11 @@ struct RowView: View {
     
     var body: some View {
         HStack {
-            Text(leadingText).font(.headline)
+            Text(leadingText).font(.body)
             
             Spacer()
             
-            Text(trailingText).font(.subheadline)
+            Text(trailingText).font(.callout)
         }
     }
 }

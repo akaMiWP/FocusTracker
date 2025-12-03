@@ -23,28 +23,21 @@ struct ContentView: View {
 
     var body: some View {
         TabView {
-            Tab("Session", image: "") {
+            Tab("Session", systemImage: "clock") {
                 NavigationStack {
                     SessionView(viewModel: .init(itemsRepository: viewModel.itemsRepository))
                         .navigationTitle("Session")
                 }
             }
             
-            Tab("Session", image: "") {
-                NavigationStack {
-                    SessionView(viewModel: .init(itemsRepository: viewModel.itemsRepository))
-                        .navigationTitle("Session")
-                }
-            }
-            
-            Tab("Items", image: "") {
+            Tab("Items", systemImage: "bag.fill") {
                 NavigationStack {
                     FocusListView(viewModel: .init(itemsRepository: viewModel.itemsRepository))
                         .navigationTitle("Items")
                 }
             }
             
-            Tab("History", image: "") {
+            Tab("History", systemImage: "folder.fill") {
                 NavigationStack {
                     EmptyView()
                         .navigationTitle("History")
