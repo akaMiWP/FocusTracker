@@ -71,7 +71,7 @@ extension SessionViewModel {
     
     func resumeTimer() {
         countdownTask = Task { [weak self] in
-            guard let self, let focusedItem, let startingTime, let pendingFocusSession else { return }
+            guard let self, let pendingFocusSession else { return }
             
             while let current = self.remainingTime, current > 0 {
                 try? await Task.sleep(for: .seconds(1))

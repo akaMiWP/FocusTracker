@@ -4,6 +4,7 @@ import SwiftData
 protocol ItemsRepositoryProtocol {
     var focusItemsStream: AsyncStream<[FocusItem]> { get async }
     var focusedItemStream: AsyncStream<FocusItem?> { get async }
+    var focusSessionsStream: AsyncStream<[FocusSession]> { get async }
     
     // FocusItem
     func add(_ item: FocusItem) async
@@ -29,7 +30,9 @@ final class ItemsRepository: ItemsRepositoryProtocol {
     
     // Focus session properties
     private var focusItem: FocusItem?
+    private var focusSessions: [FocusSession] = []
     private var focusItemContinuation: AsyncStream<FocusItem?>.Continuation?
+    private var focusSessionContinuations: [AsyncStream<[FocusSession]>.Continuation] = []
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
@@ -69,7 +72,7 @@ extension ItemsRepository {
         try? modelContext.save()
         
         items.append(item)
-        broadcast()
+        broadcastFocusItems()
     }
     
     func update(_ item: FocusItem) async {
@@ -84,9 +87,10 @@ extension ItemsRepository {
         
         if let idx = items.firstIndex(where: { $0.id == item.id }) {
             items[idx] = item
-            broadcast()
+            broadcastFocusItems()
         }
         
+        //TODO: can remove (optional)
         if focusItem?.id == item.id {
             focusItem = item
             focusItemContinuation?.yield(focusItem)
@@ -113,7 +117,7 @@ extension ItemsRepository {
         let idsSet = Set(idsToDelete)
         items.removeAll { idsSet.contains($0.id) }
 
-        broadcast()
+        broadcastFocusItems()
     }
 }
 
@@ -126,6 +130,13 @@ extension ItemsRepository {
         }
     }
     
+    var focusSessionsStream: AsyncStream<[FocusSession]> {
+        AsyncStream { continuation in
+            self.focusSessionContinuations.append(continuation)
+            continuation.yield(focusSessions)
+        }
+    }
+    
     func record(_ session: FocusSession) async {
         let id = session.focusItemID
         let descriptor = FetchDescriptor<FocusItemEntity>(predicate: #Predicate { $0.id == id })
@@ -133,8 +144,8 @@ extension ItemsRepository {
         guard let _ = try? modelContext.fetch(descriptor).first else { return }
         modelContext.insert(FocusSessionEntity(session: session))
         try? modelContext.save()
-        
-        //TODO: Update a list of finished sessions for History screens
+        focusSessions.append(session)
+        broadcastFocusSessions()
     }
     
     func update(_ session: FocusSession) async {
@@ -145,24 +156,39 @@ extension ItemsRepository {
         managed.endTime = session.endTime
         try? modelContext.save()
         
-        //TODO: Update a list of finished sessions for History screens
+        if let idx = focusSessions.firstIndex(where: { $0.id == session.id }) {
+            focusSessions[idx] = session
+            broadcastFocusSessions()
+        }
     }
 }
 
 // MARK: - Private
 private extension ItemsRepository {
-    func broadcast() {
+    func broadcastFocusItems() {
         for c in continuations {
             c.yield(items)
         }
     }
     
+    func broadcastFocusSessions() {
+        for c in focusSessionContinuations {
+            c.yield(focusSessions)
+        }
+    }
+    
     func loadInitial() async {
-        guard let entities = try? modelContext.fetch(FetchDescriptor<FocusItemEntity>()) else { return }
-
-        let items = entities.map(FocusItem.init(entity:))
-        self.items = items
-        broadcast()
+        if let entities = try? modelContext.fetch(FetchDescriptor<FocusItemEntity>()) {
+            let items = entities.map(FocusItem.init(entity:))
+            self.items = items
+            broadcastFocusItems()
+        }
+        
+        if let entities = try? modelContext.fetch(FetchDescriptor<FocusSessionEntity>()) {
+            let sessions = entities.map(FocusSession.init(entity:))
+            self.focusSessions = sessions
+            broadcastFocusSessions()
+        }
         
         if let focusItemId = UserDefaults.standard.string(forKey: UserDefaultKey.focusItemID.rawValue) {
             focusItem = items.first(where: { $0.id == focusItemId }) ?? items.first

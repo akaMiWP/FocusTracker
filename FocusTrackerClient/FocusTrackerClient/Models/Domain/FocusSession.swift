@@ -21,6 +21,17 @@ struct FocusSession {
     }
 }
 
+extension FocusSession {
+    init(entity: FocusSessionEntity) {
+        self.init(
+            id: entity.id,
+            focusItemID: entity.focusItemID,
+            startTime: entity.startTime,
+            endTime: entity.endTime
+        )
+    }
+}
+
 import SwiftData
 @Model
 final class FocusSessionEntity {
