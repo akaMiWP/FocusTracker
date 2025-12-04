@@ -1,7 +1,7 @@
 //
 //  Created by akaMiWP on 4/12/2568 BE.
 //  Copyright © 2568 BE. All rights reserved.
-    
+
 import SwiftUI
 
 struct HistoryView: View {
@@ -11,11 +11,29 @@ struct HistoryView: View {
         List {
             ForEach(viewModel.focusSessions) { session in
                 VStack(alignment: .leading, spacing: 12) {
-                    Text(session[keyPath: \.focusItem.title])
-                    Text(String(session[keyPath: \.focusItem.duration]))
+                    HStack {
+                        Text(session[keyPath: \.focusItem.title])
+                        Spacer()
+                        
+                        if let endTime = session[keyPath: \.endTime] {
+                            let formattedTime = endTime.formatted(date: .omitted, time: .shortened)
+                            Text(formattedTime)
+                        }
+                    }
+                    .font(.body)
+                    
+                    HStack {
+                        Text("duration:")
+                        Spacer()
+                        Text(String(session[keyPath: \.focusItem.duration]))
+                    }
+                    .font(.footnote)
+                    .foregroundStyle(.gray)
                     
                     if let tag = session[keyPath: \.focusItem.tag]  {
                         Text(tag)
+                            .font(.footnote)
+                            .foregroundStyle(.gray)
                     }
                 }
             }
