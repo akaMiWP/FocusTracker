@@ -9,32 +9,43 @@ struct HistoryView: View {
     
     var body: some View {
         List {
-            ForEach(viewModel.focusSessions) { session in
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text(session[keyPath: \.focusItem.title])
-                        Spacer()
-                        
-                        if let endTime = session[keyPath: \.endTime] {
-                            let formattedTime = endTime.formatted(date: .omitted, time: .shortened)
-                            Text(formattedTime)
+            ForEach(viewModel.groupedSessions.keys.sorted(by: >), id: \.self) { dateKey in
+                Section {
+                    if let sessionsForDay = viewModel.groupedSessions[dateKey] {
+                        ForEach(sessionsForDay) { session in
+                            VStack(alignment: .leading, spacing: 12) {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    HStack {
+                                        Text(session[keyPath: \.focusItem.title])
+                                        Spacer()
+                                        
+                                        if let endTime = session[keyPath: \.endTime] {
+                                            let formattedTime = endTime.formatted(date: .omitted, time: .shortened)
+                                            Text(formattedTime)
+                                        }
+                                    }
+                                    .font(.body)
+                                    
+                                    HStack {
+                                        Text("duration:")
+                                        Spacer()
+                                        Text(String(session[keyPath: \.focusItem.duration]))
+                                    }
+                                    .font(.footnote)
+                                    .foregroundStyle(.gray)
+                                    
+                                    if let tag = session[keyPath: \.focusItem.tag]  {
+                                        Text(tag)
+                                            .font(.footnote)
+                                            .foregroundStyle(.gray)
+                                    }
+                                }
+                            }
                         }
                     }
-                    .font(.body)
-                    
-                    HStack {
-                        Text("duration:")
-                        Spacer()
-                        Text(String(session[keyPath: \.focusItem.duration]))
-                    }
-                    .font(.footnote)
-                    .foregroundStyle(.gray)
-                    
-                    if let tag = session[keyPath: \.focusItem.tag]  {
-                        Text(tag)
-                            .font(.footnote)
-                            .foregroundStyle(.gray)
-                    }
+                } header: {
+                    Text(dateKey, style: .date)
+                        .font(.headline)
                 }
             }
         }

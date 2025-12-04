@@ -3,6 +3,7 @@
 //  Copyright © 2568 BE. All rights reserved.
     
 import Combine
+import Foundation
 
 @MainActor
 final class HistoryViewModel: ObservableObject {
@@ -19,5 +20,11 @@ final class HistoryViewModel: ObservableObject {
                 self.focusSessions = sessions
             }
         }
+    }
+}
+
+extension HistoryViewModel {
+    var groupedSessions: [Date: [FocusSession]] {
+        Dictionary(grouping: focusSessions) { $0.startTime.startOfDay }
     }
 }
