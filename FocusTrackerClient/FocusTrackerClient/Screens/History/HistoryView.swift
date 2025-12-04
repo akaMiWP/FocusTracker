@@ -10,7 +10,14 @@ struct HistoryView: View {
     var body: some View {
         List {
             ForEach(viewModel.focusSessions) { session in
-                Text(session.focusItemID)
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(session[keyPath: \.focusItem.title])
+                    Text(String(session[keyPath: \.focusItem.duration]))
+                    
+                    if let tag = session[keyPath: \.focusItem.tag]  {
+                        Text(tag)
+                    }
+                }
             }
         }
     }

@@ -137,11 +137,10 @@ extension ItemsRepository {
     }
     
     func record(_ session: FocusSession) async {
-        let id = session.focusItemID
+        let id = session.focusItem.id
         let descriptor = FetchDescriptor<FocusItemEntity>(predicate: #Predicate { $0.id == id })
-        
-        guard let _ = try? modelContext.fetch(descriptor).first else { return }
-        modelContext.insert(FocusSessionEntity(session: session))
+        guard let itemEntity = try? modelContext.fetch(descriptor).first else { return }
+        modelContext.insert(FocusSessionEntity(session: session, focusItem: itemEntity))
         try? modelContext.save()
         focusSessions.append(session)
         broadcastFocusSessions()

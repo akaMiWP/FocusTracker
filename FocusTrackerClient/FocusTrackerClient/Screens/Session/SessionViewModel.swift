@@ -64,7 +64,7 @@ extension SessionViewModel {
             }
             
             //TODO: show dialog timer alert done
-            let session: FocusSession = .init(focusItemID: focusedItem.id, startTime: startingTime, endTime: .init())
+            let session: FocusSession = .init(focusItem: focusedItem, startTime: startingTime, endTime: .init())
             await itemsRepository.record(session)
         }
     }
@@ -90,7 +90,7 @@ extension SessionViewModel {
         resetCountdownTask()
         
         guard let focusedItem, let startingTime else { return }
-        let session: FocusSession = .init(focusItemID: focusedItem.id, startTime: startingTime)
+        let session: FocusSession = .init(focusItem: focusedItem, startTime: startingTime)
         self.pendingFocusSession = session
         Task { [weak self] in
             guard let self else { return }
