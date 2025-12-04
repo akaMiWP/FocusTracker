@@ -41,4 +41,9 @@ final class FocusListViewModel: ObservableObject {
     func remove(at offsets: IndexSet) {
         Task { await itemsRepository.remove(at: offsets) }
     }
+    
+    func valdiate(item: FocusItem) -> Bool {
+        guard let tag = item.tag else { return false }
+        return !item.title.isEmpty && !tag.isEmpty && item.duration != 0
+    }
 }

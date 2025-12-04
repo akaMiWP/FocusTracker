@@ -98,6 +98,7 @@ struct FocusItemSheetView: View {
     
     @ObservedObject var viewModel: FocusListViewModel
     @Binding var isPresented: Bool
+    @State private var isErrorPresented: Bool = false
     
     init(
         viewModel: FocusListViewModel,
@@ -117,13 +118,16 @@ struct FocusItemSheetView: View {
                 Spacer()
                 
                 Button(action: {
-                    if let selectedItem = viewModel.selectedItem {
-                        viewModel.update(item: selectedItem, title: title, tag: tag, duration: Int(duration) ?? 0)
+                    let item: FocusItem = .init(title: title, tag: tag, duration: Int(duration) ?? 0)
+                    if viewModel.valdiate(item: item) {
+                        if let selectedItem = viewModel.selectedItem {
+                            viewModel.update(item: selectedItem, title: title, tag: tag, duration: Int(duration) ?? 0)
+                        } else {
+                            viewModel.addNewItem(item: item)
+                        }
                     } else {
-                        let item: FocusItem = .init(title: title, tag: tag, duration: Int(duration) ?? 0)
-                        viewModel.addNewItem(item: item)
+                        isErrorPresented = true
                     }
-                    isPresented = false
                 }) {
                     Text("Done")
                 }
@@ -151,6 +155,9 @@ struct FocusItemSheetView: View {
             Spacer()
         }
         .padding(16)
+        .alert("Couldn't create the focus item", isPresented: $isErrorPresented) {
+            Button("OK") {}
+        }
         .onAppear {
             guard let selectedItem = viewModel.selectedItem else { return }
             title = selectedItem.title
