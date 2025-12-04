@@ -39,7 +39,7 @@ struct ContentView: View {
             
             Tab("History", systemImage: "folder.fill") {
                 NavigationStack {
-                    EmptyView()
+                    HistoryView(viewModel: .init(itemsRepository: viewModel.itemsRepository))
                         .navigationTitle("History")
                 }
             }

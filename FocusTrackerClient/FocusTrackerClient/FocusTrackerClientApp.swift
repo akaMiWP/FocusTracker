@@ -6,7 +6,7 @@ struct FocusTrackerClientApp: App {
     var body: some Scene {
         WindowGroup {
             RootWrapper()
-                .modelContainer(for: [FocusItemEntity.self])
+                .modelContainer(for: [FocusItemEntity.self, FocusSessionEntity.self])
         }
     }
 }

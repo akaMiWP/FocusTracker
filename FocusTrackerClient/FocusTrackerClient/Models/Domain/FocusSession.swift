@@ -1,6 +1,6 @@
 import Foundation
 
-struct FocusSession {
+struct FocusSession: Identifiable {
     let id: String
     let focusItemID: String
     let startTime: Date

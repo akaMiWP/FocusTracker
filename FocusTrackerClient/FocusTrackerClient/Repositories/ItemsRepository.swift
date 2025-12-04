@@ -19,7 +19,6 @@ protocol ItemsRepositoryProtocol {
     func save<T>(key: UserDefaultKey, value: T?) async
 }
 
-@MainActor
 final class ItemsRepository: ItemsRepositoryProtocol {
 
     private let modelContext: ModelContext
