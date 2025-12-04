@@ -14,7 +14,7 @@ final class FocusItemEntity {
     var createdAt: Date
     
     // Inverse relationship to sessions
-    @Relationship(deleteRule: .cascade, inverse: \FocusSessionEntity.focusItem)
+    @Relationship(deleteRule: .nullify, inverse: \FocusSessionEntity.focusItem)
     var sessions: [FocusSessionEntity] = []
     
     init(id: String, title: String, tag: String? = nil, duration: Int, createdAt: Date = .now) {

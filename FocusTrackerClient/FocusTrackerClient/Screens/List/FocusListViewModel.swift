@@ -42,8 +42,13 @@ final class FocusListViewModel: ObservableObject {
         Task { await itemsRepository.remove(at: offsets) }
     }
     
+    func createItem(title: String, tag: String, duration: String) -> FocusItem {
+        let tag = tag.isEmpty ? nil : tag
+        let duration = Int(duration) ?? 0
+        return .init(title: title, tag: tag, duration: duration)
+    }
+    
     func valdiate(item: FocusItem) -> Bool {
-        guard let tag = item.tag else { return false }
-        return !item.title.isEmpty && !tag.isEmpty && item.duration != 0
+        !item.title.isEmpty && item.duration != 0
     }
 }

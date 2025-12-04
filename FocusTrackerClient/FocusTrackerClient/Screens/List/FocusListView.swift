@@ -118,13 +118,14 @@ struct FocusItemSheetView: View {
                 Spacer()
                 
                 Button(action: {
-                    let item: FocusItem = .init(title: title, tag: tag, duration: Int(duration) ?? 0)
+                    let item = viewModel.createItem(title: title, tag: tag, duration: duration)
                     if viewModel.valdiate(item: item) {
                         if let selectedItem = viewModel.selectedItem {
                             viewModel.update(item: selectedItem, title: title, tag: tag, duration: Int(duration) ?? 0)
                         } else {
                             viewModel.addNewItem(item: item)
                         }
+                        isPresented = false
                     } else {
                         isErrorPresented = true
                     }
