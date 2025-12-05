@@ -29,7 +29,7 @@ struct HistoryView: View {
                                     HStack {
                                         Text("duration:")
                                         Spacer()
-                                        Text(String(session[keyPath: \.focusItem.duration]))
+                                        Text("\(String(session[keyPath: \.focusItem.duration])) minutes")
                                     }
                                     .font(.footnote)
                                     .foregroundStyle(.gray)
